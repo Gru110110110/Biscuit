@@ -51,8 +51,12 @@ public class Utils {
     }
 
     // delete all cache image
-    public static void clearCacheImage(Context context) {
-        File file = new File(getCacheDir(context));
+    public static void clearCache(Context context) {
+        clearCache(getCacheDir(context));
+    }
+
+    public static void clearCache(String dir) {
+        File file = new File(dir);
         File[] files = file.listFiles();
         if (files.length > 0) {
             for (File f : files) {
@@ -103,7 +107,7 @@ public class Utils {
         return bitmap;
     }
 
-    public static void log(String tag, String msg) {
+     static void log(String tag, String msg) {
         if (loggingEnabled) {
             Log.e(tag, msg);
         }

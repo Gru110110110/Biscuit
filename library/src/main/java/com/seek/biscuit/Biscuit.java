@@ -31,6 +31,16 @@ public class Biscuit {
         return new Builder(context);
     }
 
+    //default
+    public static void clearCache(Context context) {
+        Utils.clearCache(context);
+    }
+
+    //if have been customize cache dir
+    public static void clearCache(String dir) {
+        Utils.clearCache(dir);
+    }
+
     @IntDef({SAMPLE, SCALE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface CompressType {
@@ -59,9 +69,9 @@ public class Biscuit {
         }
 
         public Builder targetDir(String targetDir) {
-            if (!TextUtils.isEmpty(targetDir)){
-                String last = targetDir.substring(targetDir.length()-1,targetDir.length());
-                if (!last.equals("/")){
+            if (!TextUtils.isEmpty(targetDir)) {
+                String last = targetDir.substring(targetDir.length() - 1, targetDir.length());
+                if (!last.equals("/")) {
                     throw new IllegalArgumentException("targetDir must be end with \"/\"");
                 }
             }
@@ -127,4 +137,5 @@ public class Biscuit {
             return new Biscuit(mPaths, mTargetDir, mIgnoreAlpha, mQuality, mCompressType, mUseOriginalName, loggingEnabled, mCompressListener, mExecutor);
         }
     }
+
 }
