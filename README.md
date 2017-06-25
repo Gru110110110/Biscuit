@@ -26,7 +26,7 @@
 
 ![](https://github.com/pruas/Biscuit/blob/master/biscuit_compressed.png)
 
-上图八张图片压缩数据对比：
+上图中八张图片压缩数据对比：
 
 原图 | `Biscuit` | `Wechat`
 ---- | ------ | ------
@@ -38,6 +38,8 @@
 3120*4160/3.3MB|960*1280/100.56KB|960*1280/99.18KB
 3120*4160/3.39MB|960*1280/93.5KB|960*1280/93.87KB
 4160*3120/3.28MB|1280*960/72.57KB|1280*960/71.08KB
+
+可以看到压缩后的图片宽高和微信非常一致！！！图片大小也几乎相等！！！
 
 # Usage
 Step 1. Add it in your root build.gradle at the end of repositories:
@@ -62,7 +64,7 @@ Step 3. Use it wherever you need
                         .listener(mCompressListener)//压缩监听
                         .build();
 ```
-Or you could customize like this
+Or you can customize like this
 ```java
                 Biscuit.with(this)
                         .path(photos) //可以传入一张图片路径，也可以传入一个图片路径列表
