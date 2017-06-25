@@ -1,7 +1,20 @@
 # Biscuit
 [![](https://jitpack.io/v/pruas/Biscuit.svg)](https://jitpack.io/#pruas/Biscuit)
 
-`Biscuit`是一个便捷的`android` 压缩图片库。由于微信是行业标杆，所以在写本库的时候，特意研究了下微信的压缩效果，以在小米`NOTE LTE`上为例，经过观察微信压缩效果，逆向推算出微信可能的压缩方式,发现微信很大概率上采用缩放压缩方式。于是本库采用两种压缩方式（采样率、缩放）供使用者选择使用，默认是采用和微信一样的缩放压缩方式并且效果非常接近！
+`Biscuit`是一个便捷的`android` 压缩图片库。由于微信是行业标杆，所以在写本库的时候，特意研究了下微信的压缩效果，以在小米`NOTE LTE`上为例，经过观察微信压缩效果，逆向推算出微信可能的压缩方式,发现微信很大概率上采用缩放压缩方式。于是本库采用两种压缩方式（采样率、缩放）供使用者选择使用，默认是采用和微信一样的缩放压缩方式并且效果非常接近！详见下面比较！
+
+# 功能
+* 可以传入一张或一个列表进行压缩
+* 可以自定义保存路径
+* 可以自定义压缩后是否使用原图名字命名
+* 可以自定义压缩质量范围
+* 可以选择缩放压缩或者采样率压缩
+* 可以自定义执行器
+* 可以自定义是否忽略透明度（忽略则质量差些，大小也将减小一半）
+* 压缩前检查是否会引发OOM风险，避免程序Crash
+* 可以清除缓存
+* 压缩后拓展名不变。
+* 可以控制log输出
 
 # 压缩效果对比
 
@@ -39,7 +52,7 @@ Step 1. Add it in your root build.gradle at the end of repositories:
 Step 2. Add the dependency
 ```gradle
 	dependencies {
-	        compile 'com.github.pruas:Biscuit:v1.0'
+	        compile 'com.github.pruas:Biscuit:v1.0.1'
 	}
 ```
 Step 3. Use it wherever you need
@@ -62,6 +75,14 @@ Or you could customize like this
 //                        .ignoreAlpha(true)//忽略alpha通道，对图片没有透明度要求可以这么做，默认不忽略。
 //                        .compressType(Biscuit.SAMPLE)//采用采样率压缩方式，默认是使用缩放压缩方式，也就是和微信的一样。
                         .build();
+```
+Clear cache:
+```java
+Biscuit.clearCache(this);// default
+```
+or
+```java
+Biscuit.clearCache(FileUtils.getImageDir());//when you have set custom dir
 ```
 # 说明
 本库是在单一手机上测试，小米`Note 1080*1920`，所以如果你在本库过程中遇到什么问题，欢迎给我提`Issues` 。
