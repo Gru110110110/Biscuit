@@ -79,6 +79,11 @@ public class Biscuit {
             return this;
         }
 
+        public Builder compressType(@CompressType int compressType) {
+            mCompressType = compressType;
+            return this;
+        }
+
         public Builder loggingEnabled(boolean enabled) {
             loggingEnabled = enabled;
             return this;
