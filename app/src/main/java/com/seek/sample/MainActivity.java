@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void getPhoto(View view) {
         PhotoPicker.builder()
-                .setPhotoCount(4)
+                .setPhotoCount(9)
                 .setShowCamera(true)
                 .setShowGif(true)
                 .setPreviewEnabled(false)
@@ -70,9 +70,9 @@ public class MainActivity extends AppCompatActivity {
                 Glide.with(this).load(photos.get(0)).into(mImageView);
                 Biscuit.with(this)
                         .path(photos)
-                        .originalName(true)
-                        .listener(mCompressListener)
-                        .targetDir(FileUtils.getImageDir())
+                        .originalName(false) //使用原图名字
+                        .listener(mCompressListener)//压缩监听
+                        .targetDir(FileUtils.getImageDir())//自定义保存路径
                         .build();
             }
         }

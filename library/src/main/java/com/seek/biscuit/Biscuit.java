@@ -59,6 +59,12 @@ public class Biscuit {
         }
 
         public Builder targetDir(String targetDir) {
+            if (!TextUtils.isEmpty(targetDir)){
+                String last = targetDir.substring(targetDir.length()-1,targetDir.length());
+                if (!last.equals("/")){
+                    throw new IllegalArgumentException("targetDir must be end with \"/\"");
+                }
+            }
             mTargetDir = targetDir;
             return this;
         }
