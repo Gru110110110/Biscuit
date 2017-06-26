@@ -55,7 +55,7 @@ Step 1. Add it in your root build.gradle at the end of repositories:
 Step 2. Add the dependency
 ```gradle
 	dependencies {
-	        compile 'com.github.pruas:Biscuit:v1.0.1'
+	        compile 'com.github.pruas:Biscuit:v1.0.2'
 	}
 ```
 Step 3. Use it wherever you need
