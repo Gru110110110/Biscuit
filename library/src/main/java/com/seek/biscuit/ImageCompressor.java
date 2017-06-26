@@ -27,11 +27,12 @@ public class ImageCompressor implements Compressor {
     private Dispatcher dispatcher;
     private boolean ignoreAlpha;
     private boolean useOriginalName;
+    private long thresholdSize;
     CompressListener compressListener;
     String targetPath;
     Exception exception;
 
-    public ImageCompressor(String path, String targetDir, int quality, @Biscuit.CompressType int compressType, boolean ignoreAlpha, boolean useOriginalName, Dispatcher dispatcher, CompressListener compressListener) {
+    public ImageCompressor(String path, String targetDir, int quality, @Biscuit.CompressType int compressType, boolean ignoreAlpha, boolean useOriginalName, long thresholdSize, Dispatcher dispatcher, CompressListener compressListener) {
         this.sourcePath = new ImagePath(path);
         this.targetDir = targetDir;
         this.quality = quality;
@@ -40,10 +41,13 @@ public class ImageCompressor implements Compressor {
         this.compressListener = compressListener;
         this.ignoreAlpha = ignoreAlpha;
         this.useOriginalName = useOriginalName;
+        this.thresholdSize = thresholdSize;
     }
 
     @Override
     public boolean compress() {
+        // check whether the original size less than thresholdSize, if less ,return the original path
+        if (checkOriginalLength()) return false;
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(sourcePath.path, options);
@@ -59,7 +63,7 @@ public class ImageCompressor implements Compressor {
         }
         options.inJustDecodeBounds = false;
         options.inPreferredConfig = ignoreAlpha ? Bitmap.Config.RGB_565 : Bitmap.Config.ARGB_8888;
-        boolean permit = memoryEnough(options.outWidth / inSampleSize, options.outHeight / inSampleSize);
+        boolean permit = checkMemory(options.outWidth / inSampleSize, options.outHeight / inSampleSize);
         if (!permit) {
             generateException("no enough memory!");
             return false;
@@ -110,6 +114,24 @@ public class ImageCompressor implements Compressor {
         }
     }
 
+    private boolean checkOriginalLength() {
+        if (thresholdSize > 0) {
+            File sourceFile = new File(sourcePath.path);
+            if (!sourceFile.exists()) {
+                generateException("No such file : " + sourcePath.path);
+                return true;
+            }
+            long sourceSize = sourceFile.length();
+            log(TAG, "original size : " + sourceSize / 1024l + " KB");
+            if (sourceSize <= thresholdSize * 1024) {
+                targetPath = sourcePath.path;
+                dispatchSuccess();
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void dispatchSuccess() {
         if (dispatcher != null) {
             dispatcher.dispatchComplete(this);
@@ -128,7 +150,7 @@ public class ImageCompressor implements Compressor {
         dispatchError();
     }
 
-    private boolean memoryEnough(int width, int height) {
+    private boolean checkMemory(int width, int height) {
         Runtime runtime = Runtime.getRuntime();
         long free = runtime.maxMemory() - runtime.totalMemory() + runtime.freeMemory();
         int allocation = (width * height) << (ignoreAlpha ? 1 : 2);
@@ -175,6 +197,7 @@ public class ImageCompressor implements Compressor {
         return inSampleSize;
     }
 
+    //Base on the effect of Wechat
     private float calculateScaleSize(BitmapFactory.Options options) {
         float scale = 1f;
         int width = options.outWidth;
@@ -185,8 +208,8 @@ public class ImageCompressor implements Compressor {
         if (ratio >= 0.5f) {
             if (max > SCALE_REFERENCE_WIDTH) scale = SCALE_REFERENCE_WIDTH / (max * 1f);
         } else {
-            if (min > LIMITED_WIDTH && (1 - (ratio / 2)) * min > LIMITED_WIDTH) {
-                scale = 1 - (ratio / 2);
+            if (min > LIMITED_WIDTH && (1f - (ratio / 2f)) * min > LIMITED_WIDTH) {
+                scale = 1f - (ratio / 2f);
             }
         }
         return scale;

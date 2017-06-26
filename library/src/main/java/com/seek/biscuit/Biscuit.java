@@ -18,11 +18,11 @@ public class Biscuit {
     public final static int SCALE = 0;
     public final static int SAMPLE = 1;
 
-    Biscuit(ArrayList<String> paths, String targetDir, boolean ignoreAlpha, int quality, int compressType, boolean useOriginalName, boolean loggingEnabled, CompressListener compressListener, Executor executor) {
+    Biscuit(ArrayList<String> paths, String targetDir, boolean ignoreAlpha, int quality, int compressType, boolean useOriginalName, boolean loggingEnabled, long thresholdSize, CompressListener compressListener, Executor executor) {
         Utils.loggingEnabled = loggingEnabled;
         Dispatcher dispatcher = new Dispatcher();
         for (String path : paths) {
-            Compressor compressor = new ImageCompressor(path, targetDir, quality, compressType, ignoreAlpha, useOriginalName, dispatcher, compressListener);
+            Compressor compressor = new ImageCompressor(path, targetDir, quality, compressType, ignoreAlpha, useOriginalName, thresholdSize, dispatcher, compressListener);
             executor.execute(compressor);
         }
     }
@@ -57,6 +57,7 @@ public class Biscuit {
         private Context mContext;
         private Executor mExecutor;
         private boolean loggingEnabled;
+        private long mThresholdSize;
 
         public Builder(Context context) {
             this.mContext = context.getApplicationContext();
@@ -66,6 +67,7 @@ public class Biscuit {
             mIgnoreAlpha = false;
             mUseOriginalName = false;
             loggingEnabled = true;
+            mThresholdSize = -1;
         }
 
         public Builder targetDir(String targetDir) {
@@ -81,6 +83,14 @@ public class Biscuit {
 
         public Builder ignoreAlpha(boolean ignoreAlpha) {
             mIgnoreAlpha = ignoreAlpha;
+            return this;
+        }
+
+        /**
+         * Note that the unit is KB
+         */
+        public Builder ignoreLessThan(long thresholdSize) {
+            mThresholdSize = thresholdSize;
             return this;
         }
 
@@ -134,7 +144,7 @@ public class Biscuit {
             if (mExecutor == null) {
                 mExecutor = new DefaultExecutor();
             }
-            return new Biscuit(mPaths, mTargetDir, mIgnoreAlpha, mQuality, mCompressType, mUseOriginalName, loggingEnabled, mCompressListener, mExecutor);
+            return new Biscuit(mPaths, mTargetDir, mIgnoreAlpha, mQuality, mCompressType, mUseOriginalName, loggingEnabled, mThresholdSize, mCompressListener, mExecutor);
         }
     }
 

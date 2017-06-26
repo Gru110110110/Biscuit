@@ -26,6 +26,7 @@ public class Utils {
     static float SCALE_REFERENCE_WIDTH = 1280f;
     static float LIMITED_WIDTH = 1000f;
     static int DEFAULT_QUALITY = 66;
+    static int DEFAULT_SIZE_LIMIT = 102;
     static boolean loggingEnabled = true;
 
     static {

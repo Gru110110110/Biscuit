@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
 //                        .executor(executor) //自定义实现执行，注意：必须在子线程中执行 默认使用AsyncTask线程池执行
 //                        .ignoreAlpha(true)//忽略alpha通道，对图片没有透明度要求可以这么做，默认不忽略。
 //                        .compressType(Biscuit.SAMPLE)//采用采样率压缩方式，默认是使用缩放压缩方式，也就是和微信的一样。
+                        .ignoreLessThan(100)//忽略小于100kb的图片不压缩，返回原图路径
                         .build();
             }
         }
