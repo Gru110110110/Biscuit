@@ -4,7 +4,10 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
+import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.WindowManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +19,7 @@ import java.util.ArrayList;
 
 public class Utils {
     private final static String DEFAULT_IMAGE_CACHE_PATH = "biscuit_cache";
-    static ArrayList<String> format = new ArrayList<>(3);
+    static ArrayList<String> format = new ArrayList<>();
     static String JPG = ".jpg";
     static String JPEG = ".jpeg";
     static String PNG = ".png";
@@ -25,8 +28,12 @@ public class Utils {
     static float REFERENCE_WIDTH = 1080f;
     static float SCALE_REFERENCE_WIDTH = 1280f;
     static float LIMITED_WIDTH = 1000f;
+    static float MIN_WIDTH = 640f;
     static int DEFAULT_QUALITY = 66;
-    static int DEFAULT_SIZE_LIMIT = 102;
+    static int DEFAULT_LOW_QUALITY = 60;
+    static int DEFAULT_HEIGHT_QUALITY = 82;
+    static int DEFAULT_X_HEIGHT_QUALITY = 88;
+    static int DEFAULT_XX_HEIGHT_QUALITY = 94;
     static boolean loggingEnabled = true;
 
     static {
@@ -38,8 +45,10 @@ public class Utils {
     }
 
     public static boolean isImage(String imgPath) {
+        if (TextUtils.isEmpty(imgPath)) return false;
         int begin = imgPath.lastIndexOf(".");
         int end = imgPath.length();
+        if (begin == -1) return false;
         String imageType = imgPath.substring(begin, end);
         return format.contains(imageType);
     }
@@ -108,9 +117,26 @@ public class Utils {
         return bitmap;
     }
 
-     static void log(String tag, String msg) {
+    static void log(String tag, String msg) {
         if (loggingEnabled) {
             Log.e(tag, msg);
+        }
+    }
+
+    static int getDefaultQuality(Context context) {
+        DisplayMetrics dm = new DisplayMetrics();
+        ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getMetrics(dm);
+        float density = dm.density;
+        if (density > 3f) {
+            return DEFAULT_LOW_QUALITY;
+        } else if (density > 2.5f && density <= 3f) {
+            return DEFAULT_QUALITY;
+        } else if (density > 2f && density <= 2.5f) {
+            return DEFAULT_HEIGHT_QUALITY;
+        } else if (density > 1.5f && density <= 2f) {
+            return DEFAULT_X_HEIGHT_QUALITY;
+        } else {
+            return DEFAULT_XX_HEIGHT_QUALITY;
         }
     }
 }

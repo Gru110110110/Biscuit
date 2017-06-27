@@ -7,23 +7,33 @@ import android.text.TextUtils;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+
+import static com.seek.biscuit.Utils.log;
 
 /**
  * Created by seek on 2017/6/23.
  */
 
 public class Biscuit {
-
+    private final static String TAG = "Biscuit";
     public final static int SCALE = 0;
     public final static int SAMPLE = 1;
 
     Biscuit(ArrayList<String> paths, String targetDir, boolean ignoreAlpha, int quality, int compressType, boolean useOriginalName, boolean loggingEnabled, long thresholdSize, CompressListener compressListener, Executor executor) {
         Utils.loggingEnabled = loggingEnabled;
         Dispatcher dispatcher = new Dispatcher();
-        for (String path : paths) {
-            Compressor compressor = new ImageCompressor(path, targetDir, quality, compressType, ignoreAlpha, useOriginalName, thresholdSize, dispatcher, compressListener);
-            executor.execute(compressor);
+        Iterator<String> iterator = paths.iterator();
+        while (iterator.hasNext()) {
+            String path = iterator.next();
+            if (Utils.isImage(path)) {
+                Compressor compressor = new ImageCompressor(path, targetDir, quality, compressType, ignoreAlpha, useOriginalName, thresholdSize, dispatcher, compressListener);
+                executor.execute(compressor);
+            } else {
+                log(TAG, "can not recognize the path : " + path);
+            }
+            iterator.remove();
         }
     }
 
@@ -61,7 +71,7 @@ public class Biscuit {
 
         public Builder(Context context) {
             this.mContext = context.getApplicationContext();
-            mQuality = Utils.DEFAULT_QUALITY;
+            mQuality = Utils.getDefaultQuality(context);
             mPaths = new ArrayList<>();
             mCompressType = SCALE;
             mIgnoreAlpha = false;

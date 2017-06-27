@@ -3,6 +3,7 @@ package com.seek.biscuit;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.os.SystemClock;
 import android.text.TextUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -46,6 +47,7 @@ public class ImageCompressor implements Compressor {
 
     @Override
     public boolean compress() {
+        long begin = SystemClock.elapsedRealtime();
         // check whether the original size less than thresholdSize, if less ,return the original path
         if (checkOriginalLength()) return false;
         BitmapFactory.Options options = new BitmapFactory.Options();
@@ -63,9 +65,7 @@ public class ImageCompressor implements Compressor {
         }
         options.inJustDecodeBounds = false;
         options.inPreferredConfig = ignoreAlpha ? Bitmap.Config.RGB_565 : Bitmap.Config.ARGB_8888;
-        boolean permit = checkMemory(options.outWidth / inSampleSize, options.outHeight / inSampleSize);
-        if (!permit) {
-            generateException("no enough memory!");
+        if (!havePass(options.outWidth / inSampleSize, options.outHeight / inSampleSize)) {
             return false;
         }
         Bitmap scrBitmap = BitmapFactory.decodeFile(sourcePath.path, options);
@@ -77,6 +77,9 @@ public class ImageCompressor implements Compressor {
             float scale = calculateScaleSize(options);
             log(TAG, "scale : " + scale);
             if (scale != 1f) {
+                if (!havePass((int) (options.outWidth * scale + 0.5f), (int) (options.outHeight * scale + 0.5f))) {
+                    return false;
+                }
                 Matrix matrix = new Matrix();
                 matrix.setScale(scale, scale);
                 scrBitmap = Bitmap.createBitmap(scrBitmap, 0, 0, scrBitmap.getWidth(), scrBitmap.getHeight(), matrix, false);
@@ -110,8 +113,20 @@ public class ImageCompressor implements Compressor {
             } else {
                 dispatchSuccess();
             }
+            long end = SystemClock.elapsedRealtime();
+            long elapsed = end - begin;
+            log(TAG, "the compression time is " + elapsed);
             return saved;
         }
+    }
+
+    private boolean havePass(int w, int h) {
+        boolean canScale = checkMemory(w, h);
+        if (!canScale) {
+            generateException("no enough memory!");
+            return false;
+        }
+        return true;
     }
 
     private boolean checkOriginalLength() {
@@ -197,7 +212,7 @@ public class ImageCompressor implements Compressor {
         return inSampleSize;
     }
 
-    //Base on the effect of Wechat
+    //Base on the effect of Wechat (test on Density 2.75 1080*1920)
     private float calculateScaleSize(BitmapFactory.Options options) {
         float scale = 1f;
         int width = options.outWidth;
@@ -208,8 +223,17 @@ public class ImageCompressor implements Compressor {
         if (ratio >= 0.5f) {
             if (max > SCALE_REFERENCE_WIDTH) scale = SCALE_REFERENCE_WIDTH / (max * 1f);
         } else {
-            if (min > LIMITED_WIDTH && (1f - (ratio / 2f)) * min > LIMITED_WIDTH) {
-                scale = 1f - (ratio / 2f);
+            if ((max / min) < 10) {
+                if (min > LIMITED_WIDTH && (1f - (ratio / 2f)) * min > LIMITED_WIDTH) {
+                    scale = 1f - (ratio / 2f);
+                }
+            } else {
+                int multiple = max / min;
+                int arg = (int) Math.pow(multiple, 2);
+                scale = 1f - (arg / LIMITED_WIDTH) + 0.03f;
+                if (min * scale < Utils.MIN_WIDTH) {
+                    scale = 1f;
+                }
             }
         }
         return scale;

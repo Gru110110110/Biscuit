@@ -18,9 +18,13 @@
         android:id="@+id/imageView"
         android:layout_width="120dp"
         android:layout_height="180dp"/>
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
     <TextView
         android:id="@+id/show_info"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+    </ScrollView>
 
 </LinearLayout>
