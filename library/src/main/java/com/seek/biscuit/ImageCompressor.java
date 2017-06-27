@@ -104,8 +104,10 @@ public class ImageCompressor implements Compressor {
             fos.close();
             stream.close();
         } catch (IOException e) {
-            log(TAG, "there is an exception when trying to save the compressed image!");
-            exception = e;
+            String msg = "there is an exception when trying to save the compressed image!";
+            log(TAG, msg);
+            String path = sourcePath.path;
+            exception = new CompressException(msg, path, e);
             saved = false;
         } finally {
             if (exception != null && !saved) {
@@ -161,7 +163,8 @@ public class ImageCompressor implements Compressor {
 
     private void generateException(String msg) {
         log(TAG, msg);
-        exception = new IllegalArgumentException(msg);
+        String path = sourcePath.path;
+        exception = new CompressException(msg, path);
         dispatchError();
     }
 

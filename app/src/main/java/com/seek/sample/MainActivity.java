@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.seek.biscuit.Biscuit;
+import com.seek.biscuit.CompressException;
 import com.seek.biscuit.CompressListener;
 
 import java.util.ArrayList;
@@ -45,7 +46,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onError(Exception e) {
-                Log.e(">>>>>", e.getMessage());
+                CompressException err = (CompressException) e;
+                Log.e(">>>>>", "message : "+e.getMessage()+" original Path : "+err.originalPath);
             }
         };
     }
