@@ -105,12 +105,9 @@ public class ImageCompressor implements Compressor {
             File targetFile = new File(targetPath);
             if (!targetFile.exists()) targetFile.createNewFile();
             outputChannel = new FileOutputStream(targetFile).getChannel();
-            ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[128]);
-            byteBuffer.put(stream.toByteArray());
-            byteBuffer.flip();
-            outputChannel.write(byteBuffer);
-            stream.close();
+            outputChannel.write(ByteBuffer.wrap(stream.toByteArray()));
             outputChannel.close();
+            stream.close();
         } catch (IOException e) {
             String msg = "there is an exception when trying to save the compressed image!";
             log(TAG, msg);
