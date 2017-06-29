@@ -245,12 +245,12 @@ public class ImageCompressor implements Compressor {
         if (ratio >= 0.5f) {
             if (max > SCALE_REFERENCE_WIDTH) scale = SCALE_REFERENCE_WIDTH / (max * 1f);
         } else {
-            if ((max / min) < 10) {
+            int multiple = max / min;
+            if (multiple < 10) {
                 if (min > LIMITED_WIDTH && (1f - (ratio / 2f)) * min > LIMITED_WIDTH) {
                     scale = 1f - (ratio / 2f);
                 }
             } else {
-                int multiple = max / min;
                 int arg = (int) Math.pow(multiple, 2);
                 scale = 1f - (arg / LIMITED_WIDTH) + (multiple > 10 ? 0.01f : 0.03f);
                 if (min * scale < Utils.MIN_WIDTH) {
