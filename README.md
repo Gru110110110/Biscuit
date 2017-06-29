@@ -19,13 +19,9 @@
 
 # 压缩效果对比
 
-先一睹为快！下图是微信的压缩效果：
+先一睹为快！左边是微信压缩效果，右边是Biscuit压缩效果：
 
-![](https://github.com/pruas/Biscuit/blob/master/wechat_compressed.png)
-
-然后这是Biscuit的压缩效果：
-
-![](https://github.com/pruas/Biscuit/blob/master/biscuit_compressed.png)
+<a href="wechat_compressed.png"><img src="wechat_compressed.png" width="45%"/></a><a href="biscuit_compressed.png"><img src="biscuit_compressed.png" width="45%"/></a>
 
 上图中八张图片压缩数据对比：
 
@@ -171,7 +167,7 @@ Step 1. Add it in your root build.gradle at the end of repositories:
 Step 2. Add the dependency
 ```gradle
 	dependencies {
-	        compile 'com.github.pruas:Biscuit:v1.0.3'
+	        compile 'com.github.pruas:Biscuit:v1.0.4'
 	}
 ```
 Step 3. Use it wherever you need
