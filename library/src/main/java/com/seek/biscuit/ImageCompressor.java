@@ -4,12 +4,15 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
 import static com.seek.biscuit.Utils.LIMITED_WIDTH;
 import static com.seek.biscuit.Utils.SCALE_REFERENCE_WIDTH;
@@ -77,12 +80,14 @@ public class ImageCompressor implements Compressor {
             float scale = calculateScaleSize(options);
             log(TAG, "scale : " + scale);
             if (scale != 1f) {
-                if (!havePass((int) (options.outWidth * scale + 0.5f), (int) (options.outHeight * scale + 0.5f))) {
-                    return false;
-                }
+//                int scaleW = (int) (options.outWidth * scale + 0.5f);
+//                int scaleH = (int) (options.outHeight * scale + 0.5f);
+//                if (!havePass(scaleW, scaleH)) {
+//                    return false;
+//                }
                 Matrix matrix = new Matrix();
                 matrix.setScale(scale, scale);
-                scrBitmap = Bitmap.createBitmap(scrBitmap, 0, 0, scrBitmap.getWidth(), scrBitmap.getHeight(), matrix, false);
+                scrBitmap = transformBitmap(scrBitmap, matrix);
             }
         }
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -95,14 +100,17 @@ public class ImageCompressor implements Compressor {
         targetPath = getCacheFileName();
         log(TAG, "the image data will be saved at " + targetPath);
         boolean saved = true;
+        FileChannel outputChannel = null;
         try {
             File targetFile = new File(targetPath);
             if (!targetFile.exists()) targetFile.createNewFile();
-            FileOutputStream fos = new FileOutputStream(targetFile);
-            fos.write(stream.toByteArray());
-            fos.flush();
-            fos.close();
+            outputChannel = new FileOutputStream(targetFile).getChannel();
+            ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[128]);
+            byteBuffer.put(stream.toByteArray());
+            byteBuffer.flip();
+            outputChannel.write(byteBuffer);
             stream.close();
+            outputChannel.close();
         } catch (IOException e) {
             String msg = "there is an exception when trying to save the compressed image!";
             log(TAG, msg);
@@ -110,6 +118,7 @@ public class ImageCompressor implements Compressor {
             exception = new CompressException(msg, path, e);
             saved = false;
         } finally {
+            close(stream, outputChannel);
             if (exception != null && !saved) {
                 dispatchError();
             } else {
@@ -119,6 +128,19 @@ public class ImageCompressor implements Compressor {
             long elapsed = end - begin;
             log(TAG, "the compression time is " + elapsed);
             return saved;
+        }
+    }
+
+    private void close(ByteArrayOutputStream stream, FileChannel outputChannel) {
+        try {
+            if (stream != null) {
+                stream.close();
+            }
+            if (outputChannel != null) {
+                outputChannel.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -139,8 +161,8 @@ public class ImageCompressor implements Compressor {
                 return true;
             }
             long sourceSize = sourceFile.length();
-            log(TAG, "original size : " + sourceSize / 1024l + " KB");
-            if (sourceSize <= thresholdSize * 1024) {
+            log(TAG, "original size : " + (sourceSize >> 10) + " KB");
+            if (sourceSize <= (thresholdSize << 10)) {
                 targetPath = sourcePath.path;
                 dispatchSuccess();
                 return true;
@@ -150,13 +172,13 @@ public class ImageCompressor implements Compressor {
     }
 
     private void dispatchSuccess() {
-        if (dispatcher != null) {
+        if (dispatcher != null && compressListener != null) {
             dispatcher.dispatchComplete(this);
         }
     }
 
     private void dispatchError() {
-        if (dispatcher != null) {
+        if (dispatcher != null && compressListener != null) {
             dispatcher.dispatchError(this);
         }
     }
@@ -172,7 +194,7 @@ public class ImageCompressor implements Compressor {
         Runtime runtime = Runtime.getRuntime();
         long free = runtime.maxMemory() - runtime.totalMemory() + runtime.freeMemory();
         int allocation = (width * height) << (ignoreAlpha ? 1 : 2);
-        log(TAG, "free : " + free / 1024 / 1024 + "MB, need : " + allocation / 1024 / 1024 + "MB");
+        log(TAG, "free : " + (free >> 20) + "MB, need : " + (allocation >> 20) + "MB");
         return allocation < free;
     }
 
@@ -233,12 +255,24 @@ public class ImageCompressor implements Compressor {
             } else {
                 int multiple = max / min;
                 int arg = (int) Math.pow(multiple, 2);
-                scale = 1f - (arg / LIMITED_WIDTH) + 0.03f;
+                scale = 1f - (arg / LIMITED_WIDTH) + (multiple > 10 ? 0.01f : 0.03f);
                 if (min * scale < Utils.MIN_WIDTH) {
                     scale = 1f;
                 }
             }
         }
         return scale;
+    }
+
+    private Bitmap transformBitmap(@NonNull Bitmap bitmap, @NonNull Matrix transformMatrix) {
+        try {
+            Bitmap converted = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), transformMatrix, false);
+            if (!bitmap.sameAs(converted)) {
+                bitmap = converted;
+            }
+        } catch (OutOfMemoryError error) {
+            log(TAG, "transformBitmap: " + error);
+        }
+        return bitmap;
     }
 }

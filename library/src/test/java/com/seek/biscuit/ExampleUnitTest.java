@@ -17,9 +17,7 @@ public class ExampleUnitTest {
 
     @Test
     public void test() {
-        int srcWidth = 4128;
-        int ratio = calculateInSampleSize(srcWidth);
-        System.out.println(ratio);
+
     }
 
     private int calculateInSampleSize(int width) {

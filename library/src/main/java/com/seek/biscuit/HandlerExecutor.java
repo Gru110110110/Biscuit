@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
+import android.os.Process;
 
 /**
  * Created by seek on 2017/6/24.
@@ -15,6 +16,7 @@ public class HandlerExecutor implements Executor {
 
     public HandlerExecutor() {
         HandlerThread thread = new HandlerThread(TAG);
+        thread.setPriority(Process.THREAD_PRIORITY_BACKGROUND);
         thread.start();
         mCompressHandler = new CompressHandler(thread.getLooper());
     }
