@@ -8,5 +8,5 @@ public interface CompressListener {
 
     void onSuccess(String compressedPath);
 
-    void onError(Exception e);
+    void onError(CompressException e);
 }

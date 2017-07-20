@@ -13,7 +13,6 @@ public class Dispatcher {
     private final Handler mHandler;
     private static final int MESSAGE_COMPLETE = 0x1;
     private static final int MESSAGE_ERROR = 0x2;
-
     public Dispatcher() {
         mHandler = new DispatchHandler(Looper.getMainLooper());
     }
@@ -38,10 +37,10 @@ public class Dispatcher {
             ImageCompressor compressor = (ImageCompressor) msg.obj;
             switch (msg.what) {
                 case MESSAGE_COMPLETE:
-                    compressor.compressListener.onSuccess(compressor.targetPath);
+                    compressor.mBiscuit.dispatchSuccess(compressor.targetPath);
                     break;
                 case MESSAGE_ERROR:
-                    compressor.compressListener.onError(compressor.exception);
+                    compressor.mBiscuit.dispatchError(compressor.exception);
                     break;
             }
         }

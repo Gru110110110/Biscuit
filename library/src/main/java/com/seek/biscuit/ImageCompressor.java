@@ -28,24 +28,22 @@ public class ImageCompressor implements Compressor {
     private String targetDir;
     private int quality;
     private int compressType;
-    private Dispatcher dispatcher;
     private boolean ignoreAlpha;
     private boolean useOriginalName;
     private long thresholdSize;
-    CompressListener compressListener;
     String targetPath;
-    Exception exception;
+    CompressException exception;
+    final Biscuit mBiscuit;
 
-    public ImageCompressor(String path, String targetDir, int quality, @Biscuit.CompressType int compressType, boolean ignoreAlpha, boolean useOriginalName, long thresholdSize, Dispatcher dispatcher, CompressListener compressListener) {
+    public ImageCompressor(String path, String targetDir, int quality, @Biscuit.CompressType int compressType, boolean ignoreAlpha, boolean useOriginalName, long thresholdSize, Biscuit biscuit) {
         this.sourcePath = new ImagePath(path);
         this.targetDir = targetDir;
         this.quality = quality;
         this.compressType = compressType;
-        this.dispatcher = dispatcher;
-        this.compressListener = compressListener;
         this.ignoreAlpha = ignoreAlpha;
         this.useOriginalName = useOriginalName;
         this.thresholdSize = thresholdSize;
+        this.mBiscuit = biscuit;
     }
 
     @Override
@@ -169,14 +167,14 @@ public class ImageCompressor implements Compressor {
     }
 
     private void dispatchSuccess() {
-        if (dispatcher != null && compressListener != null) {
-            dispatcher.dispatchComplete(this);
+        if (mBiscuit != null) {
+            mBiscuit.mDispatcher.dispatchComplete(this);
         }
     }
 
     private void dispatchError() {
-        if (dispatcher != null && compressListener != null) {
-            dispatcher.dispatchError(this);
+        if (mBiscuit != null) {
+            mBiscuit.mDispatcher.dispatchError(this);
         }
     }
 

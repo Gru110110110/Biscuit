@@ -20,20 +20,120 @@ public class Biscuit {
     private final static String TAG = "Biscuit";
     public final static int SCALE = 0;
     public final static int SAMPLE = 1;
+    Dispatcher mDispatcher;
+    Executor mExecutor;
+    String targetDir;
+    boolean ignoreAlpha;
+    int quality;
+    int compressType;
+    boolean useOriginalName;
+    long thresholdSize;
+    ArrayList<CompressListener> mCompressListeners;
+    ArrayList<String> mPaths;
 
     Biscuit(ArrayList<String> paths, String targetDir, boolean ignoreAlpha, int quality, int compressType, boolean useOriginalName, boolean loggingEnabled, long thresholdSize, CompressListener compressListener, Executor executor) {
         Utils.loggingEnabled = loggingEnabled;
-        Dispatcher dispatcher = new Dispatcher();
-        Iterator<String> iterator = paths.iterator();
+        mDispatcher = new Dispatcher();
+        mExecutor = executor;
+        mCompressListeners = new ArrayList<>();
+        addListener(compressListener);
+        mPaths = new ArrayList<>();
+        mPaths.addAll(paths);
+        this.targetDir = targetDir;
+        this.ignoreAlpha = ignoreAlpha;
+        this.quality = quality;
+        this.compressType = compressType;
+        this.useOriginalName = useOriginalName;
+        this.thresholdSize = thresholdSize;
+        compress();
+    }
+
+    public void compress() {
+        Iterator<String> iterator = mPaths.iterator();
         while (iterator.hasNext()) {
             String path = iterator.next();
             if (Utils.isImage(path)) {
-                Compressor compressor = new ImageCompressor(path, targetDir, quality, compressType, ignoreAlpha, useOriginalName, thresholdSize, dispatcher, compressListener);
-                executor.execute(compressor);
+                Compressor compressor = new ImageCompressor(path, targetDir, quality, compressType, ignoreAlpha, useOriginalName, thresholdSize, this);
+                mExecutor.execute(compressor);
             } else {
                 log(TAG, "can not recognize the path : " + path);
             }
             iterator.remove();
+        }
+    }
+
+    public void addListener(CompressListener compressListener) {
+        mCompressListeners.add(compressListener);
+    }
+
+    public void removeListener(CompressListener compressListener) {
+        mCompressListeners.remove(compressListener);
+    }
+
+    public String getTargetDir() {
+        return targetDir;
+    }
+
+    public void setTargetDir(String targetDir) {
+        this.targetDir = targetDir;
+    }
+
+    public boolean isIgnoreAlpha() {
+        return ignoreAlpha;
+    }
+
+    public void setIgnoreAlpha(boolean ignoreAlpha) {
+        this.ignoreAlpha = ignoreAlpha;
+    }
+
+    public int getQuality() {
+        return quality;
+    }
+
+    public void setQuality(int quality) {
+        if (quality < 0 || quality > 100) {
+            throw new IllegalArgumentException("quality must be 0..100");
+        }
+        this.quality = quality;
+    }
+
+    public int getCompressType() {
+        return compressType;
+    }
+
+    public void setCompressType(@CompressType int compressType) {
+        this.compressType = compressType;
+    }
+
+    public boolean isUseOriginalName() {
+        return useOriginalName;
+    }
+
+    public void setUseOriginalName(boolean useOriginalName) {
+        this.useOriginalName = useOriginalName;
+    }
+
+    public long getThresholdSize() {
+        return thresholdSize;
+    }
+
+    public void setThresholdSize(long thresholdSize) {
+        this.thresholdSize = thresholdSize;
+    }
+
+    public ArrayList<String> getPaths() {
+        return mPaths;
+    }
+
+    public void addPaths(ArrayList<String> paths) {
+        if (paths != null && paths.size() > 0) {
+            mPaths.addAll(paths);
+        }
+    }
+
+    public void addPaths(String path) {
+        if (!TextUtils.isEmpty(path)) {
+            mPaths.add(path);
         }
     }
 
@@ -49,6 +149,20 @@ public class Biscuit {
     //if have been customize cache dir
     public static void clearCache(String dir) {
         Utils.clearCache(dir);
+    }
+
+    public void dispatchSuccess(String targetPath) {
+        for (CompressListener compressListener :
+                mCompressListeners) {
+            compressListener.onSuccess(targetPath);
+        }
+    }
+
+    public void dispatchError(CompressException exception) {
+        for (CompressListener compressListener :
+                mCompressListeners) {
+            compressListener.onError(exception);
+        }
     }
 
     @IntDef({SAMPLE, SCALE})
