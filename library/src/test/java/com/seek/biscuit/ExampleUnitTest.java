@@ -17,17 +17,8 @@ public class ExampleUnitTest {
 
     @Test
     public void test() {
-
-    }
-
-    private int calculateInSampleSize(int width) {
-        int inSampleSize = 1;
-        float ratio = width / Utils.REFERENCE_WIDTH;
-        if (ratio > 1.5f && ratio <= 3) {
-            inSampleSize = inSampleSize << 1;
-        } else if (ratio > 3) {
-            inSampleSize = inSampleSize << 2;
-        }
-        return inSampleSize;
+        ImagePath imagePath = new ImagePath("apk/bbs123.apk");
+        System.out.println("name : "+imagePath.name);
+        System.out.println("type : "+imagePath.type);
     }
 }

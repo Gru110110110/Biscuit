@@ -14,7 +14,7 @@ public class ImagePath {
         int typeSplit = path.lastIndexOf(".");
         int nameSplit = path.lastIndexOf("/");
         if (typeSplit != -1 && nameSplit != -1) {
-            this.name = path.substring(nameSplit + 1, typeSplit - 1);
+            this.name = path.substring(nameSplit + 1, typeSplit);
         }
         if (typeSplit != -1) {
             this.type = path.substring(typeSplit, path.length());

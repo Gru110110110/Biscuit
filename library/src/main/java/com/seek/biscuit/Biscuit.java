@@ -33,22 +33,23 @@ public class Biscuit {
 
     Biscuit(ArrayList<String> paths, String targetDir, boolean ignoreAlpha, int quality, int compressType, boolean useOriginalName, boolean loggingEnabled, long thresholdSize, CompressListener compressListener, Executor executor) {
         Utils.loggingEnabled = loggingEnabled;
-        mDispatcher = new Dispatcher();
         mExecutor = executor;
         mCompressListeners = new ArrayList<>();
         addListener(compressListener);
         mPaths = new ArrayList<>();
-        mPaths.addAll(paths);
+        if (paths != null) {
+            mPaths.addAll(paths);
+        }
         this.targetDir = targetDir;
         this.ignoreAlpha = ignoreAlpha;
         this.quality = quality;
         this.compressType = compressType;
         this.useOriginalName = useOriginalName;
         this.thresholdSize = thresholdSize;
-        compress();
     }
 
-    public void compress() {
+    public void asyncCompress() {
+        checkExecutorAndDispatcher();
         Iterator<String> iterator = mPaths.iterator();
         while (iterator.hasNext()) {
             String path = iterator.next();
@@ -62,8 +63,37 @@ public class Biscuit {
         }
     }
 
+    private void checkExecutorAndDispatcher() {
+        if (mExecutor == null) {
+            mExecutor = new DefaultExecutor();
+        }
+        if (mDispatcher == null) {
+            mDispatcher = new Dispatcher();
+        }
+    }
+
+    public ArrayList<String> syncCompress() {
+        ArrayList<String> results = new ArrayList<>();
+        Iterator<String> iterator = mPaths.iterator();
+        while (iterator.hasNext()) {
+            String path = iterator.next();
+            if (Utils.isImage(path)) {
+                ImageCompressor compressor = new ImageCompressor(path, targetDir, quality, compressType, ignoreAlpha, useOriginalName, thresholdSize, null);
+                boolean success = compressor.compress();
+                results.add(success ? compressor.targetPath : path);
+            } else {
+                log(TAG, "can not recognize the path : " + path);
+            }
+            iterator.remove();
+        }
+        return results;
+    }
+
+
     public void addListener(CompressListener compressListener) {
-        mCompressListeners.add(compressListener);
+        if (compressListener != null) {
+            mCompressListeners.add(compressListener);
+        }
     }
 
     public void removeListener(CompressListener compressListener) {
@@ -151,14 +181,14 @@ public class Biscuit {
         Utils.clearCache(dir);
     }
 
-    public void dispatchSuccess(String targetPath) {
+    void dispatchSuccess(String targetPath) {
         for (CompressListener compressListener :
                 mCompressListeners) {
             compressListener.onSuccess(targetPath);
         }
     }
 
-    public void dispatchError(CompressException exception) {
+    void dispatchError(CompressException exception) {
         for (CompressListener compressListener :
                 mCompressListeners) {
             compressListener.onError(exception);
@@ -264,9 +294,6 @@ public class Biscuit {
         public Biscuit build() {
             if (TextUtils.isEmpty(mTargetDir)) {
                 mTargetDir = Utils.getCacheDir(mContext);
-            }
-            if (mExecutor == null) {
-                mExecutor = new DefaultExecutor();
             }
             return new Biscuit(mPaths, mTargetDir, mIgnoreAlpha, mQuality, mCompressType, mUseOriginalName, loggingEnabled, mThresholdSize, mCompressListener, mExecutor);
         }

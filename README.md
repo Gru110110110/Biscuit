@@ -16,6 +16,7 @@
 * 压缩后拓展名不变。
 * 可以控制log输出
 * 可以设置文件大小小于某个阈值的原图不压缩直接返回原图路径
+* 提供同步方法syncCompress，同步压缩并返回压缩后路径，压缩失败返回原路径
 
 # 压缩效果对比
 
@@ -167,7 +168,7 @@ Step 1. Add it in your root build.gradle at the end of repositories:
 Step 2. Add the dependency
 ```gradle
 	dependencies {
-	        compile 'com.github.pruas:Biscuit:v1.0.6'
+	        compile 'com.github.pruas:Biscuit:v1.1.0'
 	}
 ```
 Step 3. Use it wherever you need
@@ -175,7 +176,8 @@ Step 3. Use it wherever you need
                   Biscuit.with(this)
                         .path(photos)
                         .listener(mCompressListener)//压缩监听
-                        .build();
+                        .build()
+                        .asyncCompress();//异步压缩
 ```
 Or you can customize like this
 ```java
@@ -190,8 +192,57 @@ Or you can customize like this
 //                        .ignoreAlpha(true)//忽略alpha通道，对图片没有透明度要求可以这么做，默认不忽略。
 //                        .compressType(Biscuit.SAMPLE)//采用采样率压缩方式，默认是使用缩放压缩方式，也就是和微信效果类似。
                         .ignoreLessThan(100)//忽略小于100kb的图片不压缩，返回原图路径
-                        .build();
+                        .build()
+                        .asyncCompress();//异步压缩
 ```
+
+rxjava executor:
+```
+                    Biscuit.with(this)
+                        .path(photos) //可以传入一张图片路径，也可以传入一个图片路径列表
+                        .loggingEnabled(true)//是否输出log 默认输出
+                        .listener(mCompressListener)//压缩监听
+                        .targetDir(FileUtils.getImageDir())//自定义压缩保存路径
+                        .executor(new Executor() {
+                            @Override
+                            public void execute(Runnable compressor) {
+                                Observable.just(compressor).doOnNext(new Consumer<Runnable>() {
+                                    @Override
+                                    public void accept(Runnable runnable) throws Exception {
+                                        runnable.run();
+                                    }
+                                }).subscribeOn(Schedulers.io()).subscribe();
+                            }
+                        }) //使用rxjava来执行
+                        .ignoreLessThan(100)//忽略小于100kb的图片不压缩，返回原图路径
+                        .build()
+                        .asyncCompress();
+```
+
+rxjava execute:
+```
+          Observable.just(photos).map(new Function<ArrayList<String>, ArrayList<String>>() {
+                    @Override
+                    public ArrayList<String> apply(@NonNull ArrayList<String> strings) throws Exception {
+                        return Biscuit.with(MainActivity.this)
+                                .path(strings)
+                                .targetDir(FileUtils.getImageDir())
+                                .ignoreLessThan(100)
+                                .build().syncCompress();//同步方法
+                    }
+                }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Consumer<ArrayList<String>>() {
+                    @Override
+                    public void accept(ArrayList<String> strings) throws Exception {
+                        for (String compressedPath : strings) {
+                            info.append("compressed success！ the image data has been saved at ");
+                            info.append(compressedPath);
+                            info.append("\n\n");
+                        }
+                        mTextView.setText(info.toString());
+                    }
+                });
+```
+
 Clear cache:
 ```java
 Biscuit.clearCache(this);// default

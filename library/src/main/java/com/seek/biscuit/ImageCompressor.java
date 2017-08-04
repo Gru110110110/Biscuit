@@ -78,11 +78,6 @@ public class ImageCompressor implements Compressor {
             float scale = calculateScaleSize(options);
             log(TAG, "scale : " + scale);
             if (scale != 1f) {
-//                int scaleW = (int) (options.outWidth * scale + 0.5f);
-//                int scaleH = (int) (options.outHeight * scale + 0.5f);
-//                if (!havePass(scaleW, scaleH)) {
-//                    return false;
-//                }
                 Matrix matrix = new Matrix();
                 matrix.setScale(scale, scale);
                 scrBitmap = transformBitmap(scrBitmap, matrix);
@@ -114,11 +109,6 @@ public class ImageCompressor implements Compressor {
             saved = false;
         } finally {
             close(stream, outputChannel);
-            if (exception != null && !saved) {
-                dispatchError();
-            } else {
-                dispatchSuccess();
-            }
             long end = SystemClock.elapsedRealtime();
             long elapsed = end - begin;
             log(TAG, "the compression time is " + elapsed);
@@ -159,7 +149,6 @@ public class ImageCompressor implements Compressor {
             log(TAG, "original size : " + (sourceSize >> 10) + " KB");
             if (sourceSize <= (thresholdSize << 10)) {
                 targetPath = sourcePath.path;
-                dispatchSuccess();
                 return true;
             }
         }
@@ -207,7 +196,12 @@ public class ImageCompressor implements Compressor {
 
     @Override
     public void run() {
-        compress();
+        boolean success = compress();
+        if (exception != null && !success) {
+            dispatchError();
+        } else {
+            dispatchSuccess();
+        }
     }
 
     private int calculateInSampleSize(BitmapFactory.Options options) {
