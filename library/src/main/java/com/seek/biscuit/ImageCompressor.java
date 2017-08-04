@@ -66,7 +66,7 @@ public class ImageCompressor implements Compressor {
         }
         options.inJustDecodeBounds = false;
         options.inPreferredConfig = ignoreAlpha ? Bitmap.Config.RGB_565 : Bitmap.Config.ARGB_8888;
-        if (!havePass(options.outWidth / inSampleSize, options.outHeight / inSampleSize)) {
+        if (!noOutOfMemory(options.outWidth / inSampleSize, options.outHeight / inSampleSize)) {
             return false;
         }
         Bitmap scrBitmap = BitmapFactory.decodeFile(sourcePath.path, options);
@@ -129,7 +129,7 @@ public class ImageCompressor implements Compressor {
         }
     }
 
-    private boolean havePass(int w, int h) {
+    private boolean noOutOfMemory(int w, int h) {
         boolean canScale = checkMemory(w, h);
         if (!canScale) {
             generateException("no enough memory!");
@@ -171,7 +171,6 @@ public class ImageCompressor implements Compressor {
         log(TAG, msg);
         String path = sourcePath.path;
         exception = new CompressException(msg, path);
-        dispatchError();
     }
 
     private boolean checkMemory(int width, int height) {

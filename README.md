@@ -168,7 +168,7 @@ Step 1. Add it in your root build.gradle at the end of repositories:
 Step 2. Add the dependency
 ```gradle
 	dependencies {
-	        compile 'com.github.pruas:Biscuit:v1.1.0'
+	        compile 'com.github.pruas:Biscuit:v1.1.1'
 	}
 ```
 Step 3. Use it wherever you need
@@ -197,7 +197,7 @@ Or you can customize like this
 ```
 
 rxjava executor:
-```
+```java
                     Biscuit.with(this)
                         .path(photos) //可以传入一张图片路径，也可以传入一个图片路径列表
                         .loggingEnabled(true)//是否输出log 默认输出
@@ -220,7 +220,7 @@ rxjava executor:
 ```
 
 rxjava execute:
-```
+```java
           Observable.just(photos).map(new Function<ArrayList<String>, ArrayList<String>>() {
                     @Override
                     public ArrayList<String> apply(@NonNull ArrayList<String> strings) throws Exception {

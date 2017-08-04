@@ -2,7 +2,6 @@ package com.seek.sample;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -19,6 +18,7 @@ import java.util.ArrayList;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
@@ -92,12 +92,12 @@ public class MainActivity extends AppCompatActivity {
 ////                        .compressType(Biscuit.SAMPLE)//采用采样率压缩方式，默认是使用缩放压缩方式，也就是和微信的一样。
 //                        .ignoreLessThan(100)//忽略小于100kb的图片不压缩，返回原图路径
 //                        .build().asyncCompress();
-////                }else {
-////                    mBiscuit.addPaths(photos);//传入压缩列表
-////                    mBiscuit.asyncCompress();//开始压缩
-////                }
+//                }else {
+//                    mBiscuit.addPaths(photos);//传入压缩列表
+//                    mBiscuit.asyncCompress();//开始压缩
+//                }
 
-//                //使用rxjava自定义异步
+                //使用rxjava自定义异步
 //                Biscuit.with(this)
 //                        .path(photos) //可以传入一张图片路径，也可以传入一个图片路径列表
 //                        .loggingEnabled(true)//是否输出log 默认输出
