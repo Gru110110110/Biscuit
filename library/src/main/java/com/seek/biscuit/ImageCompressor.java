@@ -183,7 +183,7 @@ public class ImageCompressor implements Compressor {
 
     private String getCacheFileName() {
         StringBuilder cacheBuilder = new StringBuilder();
-        cacheBuilder.append(targetDir);
+        cacheBuilder.append(targetDir).append(File.separator);
         if (useOriginalName && !TextUtils.isEmpty(sourcePath.name)) {
             cacheBuilder.append(sourcePath.name);
         } else {
