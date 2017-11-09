@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.IntDef;
 import android.text.TextUtils;
 
+import java.io.File;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
@@ -21,17 +22,19 @@ public class Biscuit {
     public final static int SCALE = 0;
     public final static int SAMPLE = 1;
     Dispatcher mDispatcher;
-    Executor mExecutor;
-    String targetDir;
-    boolean ignoreAlpha;
-    int quality;
-    int compressType;
-    boolean useOriginalName;
-    long thresholdSize;
-    ArrayList<CompressListener> mCompressListeners;
-    ArrayList<String> mPaths;
+    private Executor mExecutor;
+    private String targetDir;
+    private boolean ignoreAlpha;
+    private int quality;
+    private int compressType;
+    private boolean useOriginalName;
+    private long thresholdSize;
+    private ArrayList<CompressListener> mCompressListeners;
+    private ArrayList<String> mPaths;
+    private CompressResult mCompressResult;
+    private OnCompressCompletedListener mOnCompressCompletedListener;
 
-    Biscuit(ArrayList<String> paths, String targetDir, boolean ignoreAlpha, int quality, int compressType, boolean useOriginalName, boolean loggingEnabled, long thresholdSize, CompressListener compressListener, Executor executor) {
+    Biscuit(ArrayList<String> paths, String targetDir, boolean ignoreAlpha, int quality, int compressType, boolean useOriginalName, boolean loggingEnabled, long thresholdSize, CompressListener compressListener, OnCompressCompletedListener onCompressCompletedListener, Executor executor) {
         Utils.loggingEnabled = loggingEnabled;
         mExecutor = executor;
         mCompressListeners = new ArrayList<>();
@@ -46,10 +49,12 @@ public class Biscuit {
         this.compressType = compressType;
         this.useOriginalName = useOriginalName;
         this.thresholdSize = thresholdSize;
+        this.mOnCompressCompletedListener = onCompressCompletedListener;
     }
 
     public void asyncCompress() {
         checkExecutorAndDispatcher();
+        mCompressResult = new CompressResult();
         Iterator<String> iterator = mPaths.iterator();
         while (iterator.hasNext()) {
             String path = iterator.next();
@@ -59,13 +64,12 @@ public class Biscuit {
             } else {
                 log(TAG, "can not recognize the path : " + path);
             }
-            iterator.remove();
         }
     }
 
     private void checkExecutorAndDispatcher() {
         if (mExecutor == null) {
-            mExecutor = new DefaultExecutor();
+            mExecutor = new HandlerExecutor();
         }
         if (mDispatcher == null) {
             mDispatcher = new Dispatcher();
@@ -98,6 +102,10 @@ public class Biscuit {
 
     public void removeListener(CompressListener compressListener) {
         mCompressListeners.remove(compressListener);
+    }
+
+    public void setOnCompressCompletedListener(OnCompressCompletedListener compressCompletedListener) {
+        this.mOnCompressCompletedListener = compressCompletedListener;
     }
 
     public String getTargetDir() {
@@ -186,6 +194,17 @@ public class Biscuit {
                 mCompressListeners) {
             compressListener.onSuccess(targetPath);
         }
+        mCompressResult.mSuccessPaths.add(targetPath);
+        dispatchFullCompressResult();
+    }
+
+    private void dispatchFullCompressResult() {
+        if (mCompressResult.mExceptionPaths.size() + mCompressResult.mSuccessPaths.size() == mPaths.size()) {
+            mPaths.clear();
+            if (mOnCompressCompletedListener != null) {
+                mOnCompressCompletedListener.onCompressCompleted(mCompressResult);
+            }
+        }
     }
 
     void dispatchError(CompressException exception) {
@@ -193,6 +212,8 @@ public class Biscuit {
                 mCompressListeners) {
             compressListener.onError(exception);
         }
+        mCompressResult.mExceptionPaths.add(exception.originalPath);
+        dispatchFullCompressResult();
     }
 
     @IntDef({SAMPLE, SCALE})
@@ -212,6 +233,7 @@ public class Biscuit {
         private Executor mExecutor;
         private boolean loggingEnabled;
         private long mThresholdSize;
+        private OnCompressCompletedListener mOnCompressCompletedListener;
 
         public Builder(Context context) {
             this.mContext = context.getApplicationContext();
@@ -227,8 +249,8 @@ public class Biscuit {
         public Builder targetDir(String targetDir) {
             if (!TextUtils.isEmpty(targetDir)) {
                 String last = targetDir.substring(targetDir.length() - 1, targetDir.length());
-                if (!last.equals("/")) {
-                    throw new IllegalArgumentException("targetDir must be end with \"/\"");
+                if (!last.equals(File.separator)) {
+                    throw new IllegalArgumentException("targetDir must be end with " + File.separator);
                 }
             }
             mTargetDir = targetDir;
@@ -291,11 +313,16 @@ public class Biscuit {
             return this;
         }
 
+        public Builder listener(OnCompressCompletedListener compressCompletedListener) {
+            mOnCompressCompletedListener = compressCompletedListener;
+            return this;
+        }
+
         public Biscuit build() {
             if (TextUtils.isEmpty(mTargetDir)) {
-                mTargetDir = Utils.getCacheDir(mContext);
+                mTargetDir = Utils.getCacheDir(mContext) + File.separator;
             }
-            return new Biscuit(mPaths, mTargetDir, mIgnoreAlpha, mQuality, mCompressType, mUseOriginalName, loggingEnabled, mThresholdSize, mCompressListener, mExecutor);
+            return new Biscuit(mPaths, mTargetDir, mIgnoreAlpha, mQuality, mCompressType, mUseOriginalName, loggingEnabled, mThresholdSize, mCompressListener, mOnCompressCompletedListener, mExecutor);
         }
     }
 

@@ -20,5 +20,6 @@ public class ExampleUnitTest {
         ImagePath imagePath = new ImagePath("apk/bbs123.apk");
         System.out.println("name : "+imagePath.name);
         System.out.println("type : "+imagePath.type);
+        System.out.println("type : "+imagePath.type);
     }
 }

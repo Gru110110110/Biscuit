@@ -66,10 +66,13 @@ public class ImageCompressor implements Compressor {
         }
         options.inJustDecodeBounds = false;
         options.inPreferredConfig = ignoreAlpha ? Bitmap.Config.RGB_565 : Bitmap.Config.ARGB_8888;
-        if (!noOutOfMemory(options.outWidth / inSampleSize, options.outHeight / inSampleSize)) {
+        Bitmap scrBitmap;
+        try {
+            scrBitmap = BitmapFactory.decodeFile(sourcePath.path, options);
+        } catch (OutOfMemoryError outOfMemoryError) {
+            generateException("no enough memory!");
             return false;
         }
-        Bitmap scrBitmap = BitmapFactory.decodeFile(sourcePath.path, options);
         if (scrBitmap == null) {
             generateException("the image data could not be decoded!");
             return false;
@@ -129,15 +132,6 @@ public class ImageCompressor implements Compressor {
         }
     }
 
-    private boolean noOutOfMemory(int w, int h) {
-        boolean canScale = checkMemory(w, h);
-        if (!canScale) {
-            generateException("no enough memory!");
-            return false;
-        }
-        return true;
-    }
-
     private boolean checkOriginalLength() {
         if (thresholdSize > 0) {
             File sourceFile = new File(sourcePath.path);
@@ -171,14 +165,6 @@ public class ImageCompressor implements Compressor {
         log(TAG, msg);
         String path = sourcePath.path;
         exception = new CompressException(msg, path);
-    }
-
-    private boolean checkMemory(int width, int height) {
-        Runtime runtime = Runtime.getRuntime();
-        long free = runtime.maxMemory() - runtime.totalMemory() + runtime.freeMemory();
-        int allocation = (width * height) << (ignoreAlpha ? 1 : 2);
-        log(TAG, "free : " + (free >> 20) + "MB, need : " + (allocation >> 20) + "MB");
-        return allocation < free;
     }
 
     private String getCacheFileName() {

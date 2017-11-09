@@ -11,12 +11,13 @@
 * 可以选择缩放压缩或者采样率压缩
 * 可以自定义执行器
 * 可以自定义是否忽略透明度（忽略则质量差些，大小也将减小一半）
-* 压缩前检查是否会引发OOM风险，避免程序Crash
+* OOM catch，避免Crash
 * 可以清除缓存
-* 压缩后拓展名不变。
+* 压缩后拓展名不变
 * 可以控制log输出
 * 可以设置文件大小小于某个阈值的原图不压缩直接返回原图路径
 * 提供同步方法syncCompress，同步压缩并返回压缩后路径，压缩失败返回原路径
+* 提供压缩全部完成监听
 
 # 压缩效果对比
 
@@ -168,7 +169,7 @@ Step 1. Add it in your root build.gradle at the end of repositories:
 Step 2. Add the dependency
 ```gradle
 	dependencies {
-	        compile 'com.github.pruas:Biscuit:v1.1.1'
+	        compile 'com.github.pruas:Biscuit:v1.2.0'
 	}
 ```
 Step 3. Use it wherever you need
@@ -186,9 +187,10 @@ Or you can customize like this
                         .loggingEnabled(true)//是否输出log 默认输出
 //                        .quality(50)//质量压缩值（0...100）默认已经非常接近微信，所以没特殊需求可以不用自定义
                         .originalName(true) //使用原图名字来命名压缩后的图片，默认不使用原图名字,随机图片名字
-                        .listener(mCompressListener)//压缩监听
+                        .listener(mCompressListener)//压缩监听,每压缩完成一张即回调一次监听
+                        .listener(mOnCompressCompletedListener)//压缩完成监听，只有传入的所有图片都压缩结束才回调
                         .targetDir(FileUtils.getImageDir())//自定义压缩保存路径
-//                        .executor(executor) //自定义实现执行，注意：必须在子线程中执行 默认使用AsyncTask线程池执行
+//                        .executor(executor) //自定义实现执行，注意：必须在子线程中执行 默认使用HandlerThread执行
 //                        .ignoreAlpha(true)//忽略alpha通道，对图片没有透明度要求可以这么做，默认不忽略。
 //                        .compressType(Biscuit.SAMPLE)//采用采样率压缩方式，默认是使用缩放压缩方式，也就是和微信效果类似。
                         .ignoreLessThan(100)//忽略小于100kb的图片不压缩，返回原图路径

@@ -13,6 +13,7 @@ public class Dispatcher {
     private final Handler mHandler;
     private static final int MESSAGE_COMPLETE = 0x1;
     private static final int MESSAGE_ERROR = 0x2;
+
     public Dispatcher() {
         mHandler = new DispatchHandler(Looper.getMainLooper());
     }
