@@ -254,4 +254,4 @@ or
 Biscuit.clearCache(FileUtils.getImageDir());//when you have set custom dir
 ```
 # 说明
-本库是在单一手机上测试，小米`Note 1080*1920`，所以如果你在使用本库过程中遇到什么问题，欢迎给我提`Issues` 。
+本库是在单一手机上测试，小米`Note 1080*1920`，所以如果你在使用本库过程中遇到什么问题，欢迎给我提`Issues` 。QQ交流群号:208317912。
