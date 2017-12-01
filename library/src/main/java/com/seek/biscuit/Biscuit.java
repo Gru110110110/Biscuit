@@ -62,6 +62,7 @@ public class Biscuit {
                 Compressor compressor = new ImageCompressor(path, targetDir, quality, compressType, ignoreAlpha, useOriginalName, thresholdSize, this);
                 mExecutor.execute(compressor);
             } else {
+                iterator.remove();
                 log(TAG, "can not recognize the path : " + path);
             }
         }

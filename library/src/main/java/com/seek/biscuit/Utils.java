@@ -54,7 +54,7 @@ public class Utils {
         int end = imgPath.length();
         if (begin == -1) return false;
         String imageType = imgPath.substring(begin, end);
-        return format.contains(imageType);
+        return format.contains(imageType.toLowerCase());
     }
 
     // default cache dir
