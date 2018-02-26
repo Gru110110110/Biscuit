@@ -182,10 +182,21 @@ public class ImageCompressor implements Compressor {
     @Override
     public void run() {
         boolean success = compress();
+        saveExifForResult();
         if (exception != null && !success) {
             dispatchError();
         } else {
             dispatchSuccess();
+        }
+    }
+
+    private void saveExifForResult() {
+        if (Utils.JPEG.contains(sourcePath.type.toLowerCase())||Utils.JPG.contains(sourcePath.type.toLowerCase())) {
+            try {
+                Utils.saveExif(sourcePath.path, targetPath);
+            } catch (Exception e) {
+                log(TAG, "can`nt save exif info!");
+            }
         }
     }
 

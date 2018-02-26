@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 
@@ -172,4 +173,23 @@ public class Utils {
             if (outputChannel != null) outputChannel.close();
         }
     }
+
+    public static void saveExif(String oldFilePath, String newFilePath) throws Exception {
+        ExifInterface oldExif=new ExifInterface(oldFilePath);
+        ExifInterface newExif=new ExifInterface(newFilePath);
+        Class<ExifInterface> cls = ExifInterface.class;
+        Field[] fields = cls.getFields();
+        for (int i = 0; i < fields.length; i++) {
+            String fieldName = fields[i].getName();
+            if (!TextUtils.isEmpty(fieldName) && fieldName.startsWith("TAG")) {
+                String fieldValue = fields[i].get(cls).toString();
+                String attribute = oldExif.getAttribute(fieldValue);
+                if (attribute != null) {
+                    newExif.setAttribute(fieldValue, attribute);
+                }
+            }
+        }
+        newExif.saveAttributes();
+    }
+
 }
