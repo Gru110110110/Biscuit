@@ -169,7 +169,7 @@ Step 1. Add it in your root build.gradle at the end of repositories:
 Step 2. Add the dependency
 ```gradle
 	dependencies {
-	        compile 'com.github.pruas:Biscuit:v1.2.0'
+	        compile 'com.github.pruas:Biscuit:v1.3.0'
 	}
 ```
 Step 3. Use it wherever you need
